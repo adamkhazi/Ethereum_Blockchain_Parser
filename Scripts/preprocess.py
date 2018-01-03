@@ -11,12 +11,19 @@ from Crawler import Crawler
 from ContractMap import ContractMap
 import subprocess
 import time
+import argparse
+import pdb
+
 LOGDIR = "./../Preprocessing/logs"
 
+parser = argparse.ArgumentParser()
+parser.add_argument("-u", "--username", type=str, help="Local MongoDB username")
+parser.add_argument("-p", "--password", type=str, help="Local MongoDB password")
+args = parser.parse_args()
 
-#print("Booting processes.")
+print("Booting processes.")
 # Catch up with the crawler
-c = Crawler.Crawler()
+c = Crawler.Crawler(mongo_user=args.username, mongo_pass=args.password, mongo_host="localhost")
 
 print("Updating contract hash map.")
 # Update the contract addresses that have been interacted with

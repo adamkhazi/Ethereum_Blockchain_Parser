@@ -9,6 +9,7 @@ import os
 import logging
 import time
 import tqdm
+import urllib
 sys.path.append(os.path.realpath(os.path.dirname(__file__)))
 
 DIR = "/mnt/c/data/db"
@@ -58,15 +59,26 @@ class Crawler(object):
         start=True,
         rpc_port=8545,
         host="http://localhost",
-        delay=0.0001
+        delay=0.0001,
+        mongo_user=None,
+        mongo_pass=None,
+        mongo_host="localhost"
     ):
         """Initialize the Crawler."""
         print("Starting Crawler")
         self.url = "{}:{}".format(host, rpc_port)
         self.headers = {"content-type": "application/json"}
 
-        # Initializes to default host/port = localhost/27017
-        self.mongo_client = crawler_util.initMongo(MongoClient())
+        # Initializes to default host/port = localhost/27017 if not user/pass not specified
+        self.mongo_url = None if mongo_user==None or mongo_pass==None else "mongodb://{}:{}@{}/{}".format(mongo_user,
+                                                        urllib.parse.quote(mongo_pass),
+                                                        mongo_host,
+                                                        mongo_user)
+
+        self.mongo_client = crawler_util.initMongo(MongoClient()) \
+            if mongo_user==None or mongo_pass==None else \
+                crawler_util.initMongo(MongoClient(self.mongo_url))
+
         # The max block number that is in mongo
         self.max_block_mongo = None
         # The max block number in the public blockchain
