@@ -93,11 +93,12 @@ class Crawler(object):
             "jsonrpc": "2.0",
             "id": 0
         }
-        """time.sleep(self.delay)"""
+        time.sleep(self.delay)
         data=json.dumps(payload)
-        res = self.session.post(
-              self.url,
-              data, stream=True).json()
+        res = requests.post(
+            self.url,
+            data=data,
+            headers=self.headers).json()
         return res[key]
 
     def getBlock(self, n):
