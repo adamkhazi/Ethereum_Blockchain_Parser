@@ -2,13 +2,15 @@
 
 import six.moves.cPickle as pickle
 from graph_tool.all import *
+from tags import tags
 import graph_tool
 import pymongo
 import os
 import subprocess
 import signal
 import copy
-from tags import tags
+import urllib
+import pdb
 
 import analysis_util
 env = analysis_util.set_env()
@@ -68,7 +70,14 @@ class TxnGraph(object):
                 save=True,
                 load=False,
                 previous=None,
+                mongo_user=None,
+                mongo_pass=None,
+                mongo_host=None,
                 **kwargs):
+
+        self._mongo_user = mongo_user
+        self._mongo_pass = urllib.parse.quote(mongo_pass)
+        self._mongo_host = mongo_host
 
         self.f_pickle = None
         self.f_snapshot = None
@@ -143,9 +152,19 @@ class TxnGraph(object):
         try:
             # Try a connection to mongo and force a findOne request.
             # See if it makes it through.
-            client = pymongo.MongoClient(serverSelectionTimeoutMS=1000)
+            mongo_url = None
+            if self._mongo_user is not None and \
+                self._mongo_pass is not None and \
+                    self._mongo_host is not None:
+                mongo_url = "mongodb://{}:{}@{}/{}".format(self._mongo_user,
+                                                               self._mongo_pass,
+                                                                   self._mongo_host,
+                                                                       self._mongo_user)
+            client = pymongo.MongoClient(mongo_url, serverSelectionTimeoutMS=1000) if mongo_url \
+                else pymongo.MongoClient(serverSelectionTimeoutMS=1000)
+
             transactions = client["blockchainExtended"]["blocks"]
-            test = client.find_one({"number": {"$gt": 1}})
+            test = transactions.find_one({"number": {"$gt": 1}})
             popen = None
         except Exception as err:
             # If not, open up a mongod subprocess
